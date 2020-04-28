@@ -4,7 +4,7 @@ from hand_check import Hand_Check
 from player import Player
 from table import Table
 from best_player import Best_Player
-from round_manager import Round_Manager
+from roundmanager import RoundManager
 
 d = Deck()
 hand_check = Hand_Check()
@@ -18,18 +18,20 @@ p4 = Player('Danielus')
 
 list_of_p = [p1,p2,p3,p4]
 
-count = 500
+count = 1
 for player in list_of_p:
     player.draw_hand(d)
-    player.personal_money = 5000 + count
-    count += 1000
+    player.personal_money = 5000
+    if count == 1:
+        player.personal_money += 1000
+    count += 1
 
 
 table = Table(list_of_p)
 
 table.big_blind = 100
 
-r_man = Round_Manager()
+r_man = RoundManager()
 for i in range(3):
     r_man.new_cycle(d, table)
     r_man.pre_flop(table)

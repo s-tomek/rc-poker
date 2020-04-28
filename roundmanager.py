@@ -3,11 +3,13 @@ from table import Table
 from card import Card
 import os
 
-class Round_Manager:
+class RoundManager:
 
     def __init__(self):
         self.is_check_allowed = False
         self.betting_round = None
+        self.last_raising_pl = None
+
 
     def new_cycle(self, deck, table):
         self.eliminate_broke_players(table)
@@ -67,7 +69,7 @@ class Round_Manager:
     def river(self, deck, best_player, hand_check, table):
         if len(table.active_players) == 1:
             fold_winner = table.active_players[0]
-            self.the_winner_takes_it_all(best_player, hand_check, table, after_fold=True, fold_winner=fold_winner)  # in case all but one player folded before river
+            self.the_winner_takes_it_all(best_player, hand_check, table)  # in case all but one player folded before river
             self.display_for_end(fold_winner, table, after_fold=True)
             self.click_to_proceed()
             return 0
@@ -78,9 +80,11 @@ class Round_Manager:
             self.betting(table)
         self.money_to_pot(table)
         if len(table.active_players) == 1:
-            self.display_for_end(table.active_players[0], table, after_fold=True)  # in case all but one player folded during river
+            fold_winner = table.active_players[0]
+            self.display_for_end(fold_winner, table, after_fold=True)  # in case all but one player folded during river
         winners = self.the_winner_takes_it_all(best_player, hand_check, table)  # side effect: the pot is transferred to winners
-        self.display_for_end(winners, table)
+        showing_players = self.whos_showing_cards(table, best_player, hand_check)
+        self.display_for_end(winners, table, showing_players=showing_players)
         self.click_to_proceed()
 
     def betting(self, table, minimal_bet = None, preflop=False):
@@ -89,14 +93,16 @@ class Round_Manager:
         count = 0  # counts how many players made their move, everyone has to take action in each round.
         if not minimal_bet:  # present when it's pre-flop because of the big blind
             minimal_bet = 1
+        self.last_raising_pl = [pl for pl in table.active_players if pl.all_in == False][0]
         while not ready_for_next_round:
             players_for_one_loop = table.active_players.copy()  #  TODO learn for yourself, can you change the list while iterating over it
             for player in players_for_one_loop:
-                if len([pl for pl in table.active_players if pl.all_in == False]) == 1:
+                if len([pl for pl in table.active_players if pl.all_in == False]) == 1 and self.is_end_of_betting(table):  #TODO it shouldn't be ready for next round!!
                     ready_for_next_round = True
+                    # self.last_raising_pl = player  # TODO should it be here?
                     break
                 count += 1
-                if player.all_in == False:
+                if player.all_in is False:
                     self.display_for_player(table, player)
                     if preflop == True and count == initial_amount_of_p and self.is_end_of_betting(table):
                         self.is_check_allowed = True
@@ -115,36 +121,37 @@ class Round_Manager:
         players to pot, in case of all ins it additionally creates side pots,
         which are dictionary key/value pairs where key is the number of sidepot, in order of creation
         and value is a tuple consisting of the sidepot sum and players entitled for the sidepot"""
-        
-        if [pl for pl in table.active_players if (pl.all_in == True and pl.betted_money != 0)] == []:
-            for player in table.all_players:
-                table.pot = table.pot + player.betted_money
-                player.betted_money = 0
-        else:  # in case of all-ins in this round, this part creates side pots
+        #
+        # if [pl for pl in table.active_players if (pl.all_in == True and pl.betted_money != 0)] == []:
+        #     for player in table.all_players:
+        #         table.pot += player.betted_money
+        #         player.betted_money = 0
+        # else:
+        # in case of all-ins in this round, this part creates side pots
               # works! TODO decide to let or not let the last player overbet, probably dont let him?
-            while [pl for pl in table.active_players if (pl.all_in == True and pl.betted_money != 0)] != []:
-                # print("creating sidepot")
-                pl_list_for_side_pots = [pl for pl in table.active_players if pl.betted_money > 0]
-                lowest_better = min(pl_list_for_side_pots, key=lambda pl: pl.betted_money)
-                lowest_bet = lowest_better.betted_money
-                side_pot = 0
-                side_pot += table.pot
-                table.pot = 0
-                for pl in table.all_players:
-                    if pl.betted_money >= lowest_bet:
-                        pl.betted_money -= lowest_bet
-                        side_pot += lowest_bet
-                    else:
-                        side_pot += pl.betted_money
-                        pl.betted_money = 0
-                value = (side_pot, pl_list_for_side_pots)
-                # print({len(table.side_pots) + 1 : value})
-                #  table.pot += side_pot
-                table.side_pots.update({len(table.side_pots) + 1 : value})
-                # pl_list_for_side_pots = [pl for pl in pl_list_for_side_pots if pl.betted_money > 0]
-            for player in table.all_players:
-                table.pot = table.pot + player.betted_money
-                player.betted_money = 0
+        while [pl for pl in table.active_players if (pl.all_in == True and pl.betted_money != 0)] != []:
+            # print("creating sidepot")
+            pl_list_for_side_pots = [pl for pl in table.active_players if pl.betted_money > 0]
+            lowest_better = min(pl_list_for_side_pots, key=lambda pl: pl.betted_money)
+            lowest_bet = lowest_better.betted_money
+            side_pot = 0
+            side_pot += table.pot
+            table.pot = 0
+            for pl in table.all_players:
+                if pl.betted_money >= lowest_bet:
+                    pl.betted_money -= lowest_bet
+                    side_pot += lowest_bet
+                else:
+                    side_pot += pl.betted_money
+                    pl.betted_money = 0
+            value = (side_pot, pl_list_for_side_pots)
+            # print({len(table.side_pots) + 1 : value})
+            #  table.pot += side_pot
+            table.side_pots.update({len(table.side_pots) + 1 : value})
+            # pl_list_for_side_pots = [pl for pl in pl_list_for_side_pots if pl.betted_money > 0]
+        for player in table.all_players:
+            table.pot += player.betted_money
+            player.betted_money = 0
 
 
 
@@ -183,7 +190,7 @@ class Round_Manager:
 
         # winners_dict = best_player.get_best_player(hand_check,table.common_cards, *table.active_players)
         # if len(winners_dict) > 1:
-        #     self.split(table, winners_dict)  # TODO test split
+        #     self.split(table, winners_dict)
         # else:
         #     winner = list(winners_dict.keys())[0]
         #     winner.personal_money += table.pot
@@ -193,12 +200,12 @@ class Round_Manager:
 
     def distribute_money(self,table, winners_dict, pot):
         if len(winners_dict) > 1:
-            self.split(table, winners_dict, pot)  # TODO test split
+            self.split(table, winners_dict, pot)
         else:
             winner = list(winners_dict.keys())[0]
             winner.personal_money += pot
 
-    def split(self, table, winners_dict, pot):  # TODO possibly needs to be changed in case of all in, also it rounds up the pot, so it splits to integers
+    def split(self, table, winners_dict, pot):  # TODO it rounds up the pot, so it splits to integers
         winners = list(winners_dict.keys())
         pot = pot - pot % len(winners)
         pot_part = int(pot / len(winners))
@@ -238,11 +245,13 @@ class Round_Manager:
                    amount > player.personal_money:
                 amount = int(input("how much do you bet: "))
             self.get_bet(player, amount)
-            if player.personal_money == 0:
+            if player.betted_money > self.last_raising_pl.betted_money:
+                self.last_raising_pl = player
+            if player.personal_money == 0:  # TODO should a player after all in be the highest raiser
                 player.all_in = True
             self.is_check_allowed = False
 
-    def display_for_player(self, table, player):  # TODO add side pots, cause main pot does not include them!
+    def display_for_player(self, table, player):  #TODO use print("...", end="") to print in the same line if needed
 
         # for p in table.all_players:
         #     print(f"{p.name}'s index: {table.all_players.index(p)}")
@@ -275,7 +284,7 @@ class Round_Manager:
                     print(f"{d} inactive {p.name} with {p.personal_money} betted {p.betted_money} this round")
 
 
-    def display_for_end(self, winners, table, after_fold=False): # TODO test for two winners, should work
+    def display_for_end(self, winners, table, showing_players=None, after_fold=False): # TODO test for two winners, should work
         """displays information available to all players at the end
         of the cycle. If after_fold is True, meaning all but one player
         folded, no cards are shown, and only common cards from the round
@@ -283,19 +292,24 @@ class Round_Manager:
         winners is a single Player instance instead of a dictionary of winners with confiurations"""
 
         os.system("clear")
+        list0 = []
+        for pl in showing_players:
+            list0.append(pl.name)
+        print(list0)
         list1 = []
         for card in table.common_cards:
             list1.append([card.suits, card.rank])
         print(f"common cards: {list1}")
         if after_fold == False:
             for p in table.initial_order:  #  TODO has to be changed to: whos_showing_cards, also suitable for multiple sidepots
-                if p in list(winners.keys()):
+                if p in table.active_players:
                     list2 = []
                     for card in p.hand:
                         list2.append([card.suits, card.rank])
-                    print(f"{p.name} with {p.personal_money} with cards: {list2} has {winners[p][1]} and won this round")
+                    print(f"{p.name} with {p.personal_money} with cards: {list2 if p in showing_players else '--'} " +\
+                            f"{f'has {winners[p][1]} and won this round' if p in winners.keys() else 'lost this round'}")
                 elif p in table.all_players:
-                    print(f"{p.name} with {p.personal_money} lost this round")
+                    print(f"{p.name} with {p.personal_money} with cards: -- lost this round")
         if after_fold == True:
             for p in table.initial_order:
                 if p == winners: # in this case winners is a Player instance and not a dictionary
@@ -304,10 +318,37 @@ class Round_Manager:
                     print(f"{p.name} with {p.personal_money} lost this round")
 
 
-    def whos_showing_cards(self):
-        pass
+    def whos_showing_cards(self, table, best_player, hand_check ):  #TODO a player showed cards even though he wasnt among the winners!
+        """return a list of players, that should show their cards,
+        because they are competing for the main pot and all players competing
+        for side pots, if applicable"""
 
-    def is_end_of_betting(self, table):  # TODO problem either here or with count
+        showing_pls = [self.last_raising_pl]
+        remaining_to_show = [pl for pl in table.active_players if pl.all_in is False]
+        print("rem to show:")
+        for pl in remaining_to_show:
+            print(pl.name)
+        print(f"last raising: {self.last_raising_pl.name}")
+        try:
+            ix = remaining_to_show.index(self.last_raising_pl)  # last raising should never be folded or be all in, by definition unless the first betting player folds and the rest checks
+            remaining_to_show = remaining_to_show[ix + 1:] + remaining_to_show[:ix]
+        except ValueError:
+            pass
+        if remaining_to_show != []:
+            for pl in remaining_to_show:
+                winners = best_player.get_best_player(hand_check, table.common_cards, *showing_pls, pl)
+                if pl in list(winners.keys()):
+                    showing_pls.append(pl)
+        if table.side_pots:
+            for value in list(table.side_pots.values()):
+               showing_pls.extend(value[1])
+        showing_pls = list(set(showing_pls))
+        return showing_pls
+
+
+
+
+    def is_end_of_betting(self, table):  #TODO prepare for all players all in with the same amount
         not_all_in_bets = [player.betted_money for player in table.active_players if player.all_in == False]
         if len(set(not_all_in_bets)) > 1:
             return False
