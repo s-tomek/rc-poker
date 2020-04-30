@@ -16,7 +16,7 @@ class Deck:
         self.current_deck = self.LIST_OF_CARDS
         shuffle(self.current_deck)
 
-    def draw_card(self): #  TODO somehow some func allows two same cards be drawn
+    def draw_card(self):
         suits, rank = list(self.current_deck.pop(0))
         card = Card(suits, rank)
         return card
@@ -25,8 +25,6 @@ class Deck:
         self.__init__()
 
     def get_flop(self):
-        output_list = []
-        for i in range(3):
-            output_list.append(self.draw_card())
-        return output_list
+        return[self.draw_card() for i in range(3)]
+
 

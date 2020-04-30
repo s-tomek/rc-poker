@@ -12,8 +12,7 @@ class Player:
 
     def draw_hand(self, current_deck):
         self.clear_hand()
-        for i in range(2):
-            self.hand.append(current_deck.draw_card())
+        self.hand = [current_deck.draw_card() for i in range(2)]
 
     def clear_hand(self):
         self.hand = []

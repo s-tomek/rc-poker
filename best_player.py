@@ -49,7 +49,7 @@ class Best_Player:
         # print(all_configurations)
         best_conf = max(all_configurations, key= lambda conf: self.hand_ranking[conf])
         # print(best_conf)
-        players_with_best_conf = {key:value for (key, value) in best_conf_and_ranking_for_each.items() if value[1] == best_conf}
+        players_with_best_conf = {key: value for (key, value) in best_conf_and_ranking_for_each.items() if value[1] == best_conf}
         if len(players_with_best_conf) == 1:
             return players_with_best_conf
         i = 0
@@ -62,7 +62,7 @@ class Best_Player:
             # print(f"dict: {players_with_best_conf}")
             # print(f"length of dict: {len(players_with_best_conf)}")
             # print(f"list of ranks:{list_of_ranks}")
-            highest_rank = max(list_of_ranks, key= lambda p: self.rank_equivalents[p])
+            highest_rank = max(list_of_ranks, key=lambda p: self.rank_equivalents[p])
             # print(highest_rank)
             players_with_best_conf = {key:value for (key,value) in players_with_best_conf.items() if value[0][i].rank == highest_rank}
             i += 1

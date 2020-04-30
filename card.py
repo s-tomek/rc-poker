@@ -1,5 +1,4 @@
 
-
 class Card:
 
     def __init__(self, suits, rank):
