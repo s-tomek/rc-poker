@@ -17,7 +17,7 @@ class Table:
         self.side_pots = {}
         self.big_blind = 0  #   TODO make it foolproof? it should be only even numbers, preferably multiplicity of ten
         self.cycle = 0
-        self.dealer = self.all_players[random.randint(0, len(self.all_players))]
+        self.dealer = self.all_players[random.randint(0, len(self.all_players) - 1)]
 
     def add_flop(self, source_deck):
         for i in range(3):
