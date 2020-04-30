@@ -40,7 +40,7 @@ class Hand_Check:
             if output:
                 break
         if output is None:
-            return self.get_highcard(all_cards)
+            return self.get_high_card(all_cards)
         return output
 
     def is_one_pair(self, cards):
@@ -231,7 +231,7 @@ class Hand_Check:
             return None
         return conf_of_cards, "straight flush"
 
-    def get_highcard(self, cards):
+    def get_high_card(self, cards):
         """
         Returns sorted top five from given cards. Note: works only after checking for all configurations.
         Unlike other configuration checking functions it doesn't return None under any circumstances.
