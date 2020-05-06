@@ -22,9 +22,9 @@ count = 1
 for player in list_of_p:
     player.draw_hand(d)
     player.personal_money = 5000
-    if count == 1:
-        player.personal_money += 1000
-    count += 1
+    # if count == 1:
+    #     player.personal_money += 1000
+    # count += 1
 
 
 table = Table(list_of_p)
@@ -32,16 +32,16 @@ table = Table(list_of_p)
 table.big_blind = 100
 
 r_man = RoundManager()
-for i in range(3):
+for i in range(10):
     r_man.new_cycle(d, table)
     r_man.pre_flop(table)
     r_man.flop(d, table)
     r_man.turn(d, table)
-    r_man.river(d, best_player, hand_check, table)
+    r_man.river(d, table, best_player, hand_check)
 
 
-for player in list_of_p:
-    print(f"{player.name} has cards : ['{player.hand[0].suits}',{player.hand[0].rank}], ['{player.hand[0].suits}',{player.hand[1].rank}]")
+# for player in list_of_p:
+    # print(f"{player.name} has cards : ['{player.hand[0].suits}',{player.hand[0].rank}], ['{player.hand[0].suits}',{player.hand[1].rank}]")
 #
 # table = Table()
 # table.add_flop(d)

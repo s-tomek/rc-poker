@@ -78,8 +78,8 @@ class Hand_Check:
         list_of_ranks = self.get_ranks_from_cards(cards)
         rank_dict = self.repeated_rank_dict(list_of_ranks)
         if rank_dict.keys() == {2} and len(rank_dict[2]) >= 2:
-                rank_dict[2] = self.sort_ranks_from_highest(rank_dict[2])
-                conf_of_ranks = [rank_dict[2][0]] * 2 + [rank_dict[2][1]] * 2
+            rank_dict[2] = self.sort_ranks_from_highest(rank_dict[2])
+            conf_of_ranks = [rank_dict[2][0]] * 2 + [rank_dict[2][1]] * 2
         else:
             return None
         remaining_ranks = list(filter(lambda x: x not in rank_dict[2][:2], list_of_ranks))
@@ -160,8 +160,7 @@ class Hand_Check:
             return None
         return configuration_of_cards, "flush"
 
-
-    def is_full_house(self, cards):
+    def is_full_house(self, cards):  # TODO bug here
         """
         if the given 7 cards don't create the full house configuration it
         returns None, if they create the full house configuration it returns
@@ -181,12 +180,12 @@ class Hand_Check:
         temp_rank_for_pair = []
         try:
             temp_rank_for_pair.append(rank_dict[3][1])
-        except:
+        except IndexError:
             pass
         try:
             rank_dict[2] = self.sort_ranks_from_highest(rank_dict[2])
             temp_rank_for_pair.append(rank_dict[2][0])
-        except:
+        except (KeyError, IndexError):
             pass
         if not temp_rank_for_pair:
             return None
@@ -291,7 +290,7 @@ class Hand_Check:
         """
 
         suit_list = [card.suits for card in cards]
-        most_frequent_suits = max(set(suit_list), key = suit_list.count)
+        most_frequent_suits = max(set(suit_list), key=suit_list.count)
         if suit_list.count(most_frequent_suits) < 5:
             return None
         list_of_ranks = self.get_ranks_from_cards(cards)
@@ -306,11 +305,8 @@ class Hand_Check:
         """
 
         output_dict = {}
-        for i in range(2,5):
+        for i in range(2, 5):
             rep_list = [r for r in set(list_of_ranks) if list_of_ranks.count(r) == i]
             if rep_list:
                 output_dict.update({i: rep_list})
         return output_dict
-
-
-

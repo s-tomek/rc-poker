@@ -36,14 +36,19 @@ class Best_Player:
 
     def get_best_player(self, hand_check, common_cards, *players):
         """
-        gets best player or players if split,
-        configuration of five cards
-        and name of configuration as a dictionary, where players are keys
-        and configuration and name of it in a tuple as value
-        As input it takes five common cards
+        Returns a dictionary with best player as key (or multliple players
+        if it's a split). The value is a tuple consisting of (1) the
+        configuration of five relevant cards (2) name of the configuration.
+
+        If there's just one player, so no one else to compete with, the returned
+        dictionary has an empty list as configuration and empty string as it's name
+
+        As input it takes hand_check, five common cards
         (not table instance) and a number of player instances (not their hands).
           """
 
+        if len(players) == 1:
+            return {players[0]: ([], "")}
         best_conf_and_ranking_for_each = self.get_conf_from_table_and_players(hand_check, common_cards, players)
         all_configurations = [best_conf_and_ranking_for_each[player][1] for player in best_conf_and_ranking_for_each]
         best_conf = max(all_configurations, key=lambda conf: self.hand_ranking[conf])
@@ -67,8 +72,6 @@ class Best_Player:
             c_num += 1
         return players_with_best_conf
 
-
-
     def get_conf_from_table_and_players(self, hand_check, common_cards, players):
         """
         returns a dictionary of all players as keys and corresponding configurations and
@@ -83,4 +86,3 @@ class Best_Player:
             value = hand_check.get_configuration_and_ranking(all_cards)
             output_dict.update({player: value})
         return output_dict
-

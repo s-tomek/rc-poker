@@ -1,13 +1,12 @@
-from deck import Deck
-from card import Card
+
 
 class Player:
 
-    def __init__(self, name= None):
+    def __init__(self, name, personal_money):
         self.name = name
         self.hand = []
-        self.personal_money = 0
-        self.betted_money = 0
+        self.personal_money = personal_money
+        self.bet_money = 0
         self.all_in = False
 
     def draw_hand(self, current_deck):
